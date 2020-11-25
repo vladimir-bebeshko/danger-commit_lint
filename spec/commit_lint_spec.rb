@@ -3,13 +3,16 @@ require File.expand_path('spec_helper', __dir__)
 # rubocop:disable Metrics/LineLength
 
 TEST_MESSAGES = {
-  subject_cap: 'this subject needs a capital',
-  subject_words: 'Fixed',
-  subject_length: 'This is a really long subject line and should result in an error',
-  subject_period: 'This subject line ends in a period.',
-  empty_line: "This subject line is fine\nBut then I forgot the empty line separating the subject and the body.",
+  subject_pattern: 'This subject is an incorrect pattern',
+  subject_patternB: '[WRONG-1234] This subject is an incorrect pattern',
+  subject_patternC: '[MO-1234] <WRONG> This subject is an incorrect pattern',
+  subject_cap: '[MO-1234] <FIX> this subject needs a capital',
+  subject_words: '[MO-1234] <FIX> Fix',
+  subject_length: '[MO-1234] <FIX> This is a really long subject line and should result in an error',
+  subject_period: '[MO-1234] <FIX> This subject line ends in a period.',
+  empty_line: "[MO-1234] <FIX> This subject line is fine\nBut then I forgot the empty line separating the subject and the body.",
   all_errors: "this is a really long subject and it even ends in a period.\nNot to mention the missing empty line!",
-  valid: "This is a valid message\n\nYou can tell because it meets all the criteria and the linter does not complain."
+  valid: "[MO-1234] <FIX> This is a valid message\n\nYou can tell because it meets all the criteria and the linter does not complain."
 }.freeze
 
 # rubocop:enable Metrics/LineLength
@@ -39,6 +42,9 @@ module Danger
       context 'with invalid messages' do
         it 'fails those checks' do
           checks = {
+            subject_pattern: SubjectPatternCheck::MESSAGE,
+            subject_patternB: SubjectPatternCheck::MESSAGE,
+            subject_patternC: SubjectPatternCheck::MESSAGE,
             subject_cap: SubjectCapCheck::MESSAGE,
             subject_words: SubjectWordsCheck::MESSAGE,
             subject_length: SubjectLengthCheck::MESSAGE,
@@ -54,6 +60,7 @@ module Danger
             commit_lint.check
 
             status_report = commit_lint.status_report
+
             expect(report_counts(status_report)).to eq 1
             expect(status_report[:errors]).to eq [
               message_with_sha(warning)
@@ -72,8 +79,9 @@ module Danger
           commit_lint.check
 
           status_report = commit_lint.status_report
-          expect(report_counts(status_report)).to eq 4
+          expect(report_counts(status_report)).to eq 5
           expect(status_report[:errors]).to eq [
+            message_with_sha(SubjectPatternCheck::MESSAGE),
             message_with_sha(SubjectCapCheck::MESSAGE),
             message_with_sha(SubjectLengthCheck::MESSAGE),
             message_with_sha(SubjectPeriodCheck::MESSAGE),
@@ -166,6 +174,7 @@ module Danger
           allow(commit_lint.git).to receive(:commits).and_return([commit])
 
           all_checks = %i[
+            subject_pattern
             subject_cap
             subject_words
             subject_length
@@ -263,8 +272,9 @@ module Danger
             commit_lint.check warn: :all
 
             status_report = commit_lint.status_report
-            expect(report_counts(status_report)).to eq 4
+            expect(report_counts(status_report)).to eq 5
             expect(status_report[:warnings]).to eq [
+              message_with_sha(SubjectPatternCheck::MESSAGE),
               message_with_sha(SubjectCapCheck::MESSAGE),
               message_with_sha(SubjectLengthCheck::MESSAGE),
               message_with_sha(SubjectPeriodCheck::MESSAGE),
@@ -378,8 +388,9 @@ module Danger
             commit_lint.check fail: :all
 
             status_report = commit_lint.status_report
-            expect(report_counts(status_report)).to eq 4
+            expect(report_counts(status_report)).to eq 5
             expect(status_report[:errors]).to eq [
+              message_with_sha(SubjectPatternCheck::MESSAGE),
               message_with_sha(SubjectCapCheck::MESSAGE),
               message_with_sha(SubjectLengthCheck::MESSAGE),
               message_with_sha(SubjectPeriodCheck::MESSAGE),

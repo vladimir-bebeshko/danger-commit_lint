@@ -83,6 +83,7 @@ module Danger
 
     def checkers
       [
+        SubjectPatternCheck,
         SubjectCapCheck,
         SubjectWordsCheck,
         SubjectLengthCheck,

@@ -1,3 +1,5 @@
+require 'commit_lint/subject_pattern_check'
+
 module Danger
   class DangerCommitLint < Plugin
     class SubjectLengthCheck < CommitCheck # :nodoc:
@@ -12,7 +14,7 @@ module Danger
       end
 
       def initialize(message)
-        @subject = message[:subject]
+        @subject = extractSubject(message)
       end
 
       def fail?
